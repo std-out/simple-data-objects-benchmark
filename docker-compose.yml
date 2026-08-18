@@ -1,0 +1,13 @@
+services:
+  benchmark:
+    build: .
+    volumes:
+      - ..:/app
+      - pet-benchmark-vendor:/app/pet-benchmark/vendor
+      - composer-cache:/root/.composer/cache
+    working_dir: /app/pet-benchmark
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan csv:sample storage/users.csv --rows=100000 && php artisan benchmark:all"
+
+volumes:
+  pet-benchmark-vendor:
+  composer-cache:
