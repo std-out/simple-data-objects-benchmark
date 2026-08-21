@@ -7,10 +7,12 @@ namespace App\Console\Commands;
 use App\Benchmark\Fixtures\Own\EventData as OwnEventData;
 use App\Benchmark\Fixtures\Own\FlatData as OwnFlatData;
 use App\Benchmark\Fixtures\Own\PersonData as OwnPersonData;
+use App\Benchmark\Fixtures\Own\SimpleData as OwnSimpleData;
 use App\Benchmark\Fixtures\Own\TeamData as OwnTeamData;
 use App\Benchmark\Fixtures\Spatie\EventData as SpatieEventData;
 use App\Benchmark\Fixtures\Spatie\FlatData as SpatieFlatData;
 use App\Benchmark\Fixtures\Spatie\PersonData as SpatiePersonData;
+use App\Benchmark\Fixtures\Spatie\SimpleData as SpatieSimpleData;
 use App\Benchmark\Fixtures\Spatie\TeamData as SpatieTeamData;
 use App\Support\CsvUsers;
 use Illuminate\Console\Command;
@@ -34,7 +36,7 @@ final class BenchmarkAll extends Command
         $warmup = max(10, intdiv($iterations, 10));
         // Build a fresh input array (including nested arrays) for every DTO
         // invocation so the benchmark does not reuse one input object.
-        $simple = static fn (): array => ['id' => 1, 'name' => 'Ada Lovelace', 'email' => 'ada@example.com', 'country_code' => 'GB', 'registered_at' => '2026-01-15'];
+        $simple = static fn (): array => ['id' => 1, 'name' => 'Ada Lovelace', 'email' => 'ada@example.com', 'country_code' => 'GB'];
         $nested = static fn (): array => ['name' => 'Ada Lovelace', 'address' => ['street' => '12 Analytical Engine Ave', 'city' => 'London', 'zip' => 'SW1A 1AA']];
         $team = static fn (): array => [
             'name' => 'Engineering',
@@ -48,37 +50,37 @@ final class BenchmarkAll extends Command
         $this->warmCaches();
 
         $this->table(['Scenario', 'DataObject ops/s', 'laravel-data ops/s', 'DataObject advantage', 'Fastest'], [
-            $this->row('Hydration: flat', fn () => OwnFlatData::from($simple()), fn () => SpatieFlatData::from($simple()), $iterations, $warmup),
+            $this->row('Hydration: flat', fn () => OwnSimpleData::from($simple()), fn () => SpatieSimpleData::from($simple()), $iterations, $warmup),
             $this->row('Hydration: nested', fn () => OwnPersonData::from($nested()), fn () => SpatiePersonData::from($nested()), $iterations, $warmup),
             $this->row('Hydration: collection (20)', fn () => OwnTeamData::from($team()), fn () => SpatieTeamData::from($team()), $iterations, $warmup),
             $this->row('Hydration: cast', fn () => OwnEventData::from($event()), fn () => SpatieEventData::from($event()), $iterations, $warmup),
         ]);
 
-        $ownFlat = OwnFlatData::from($simple());
-        $spatieFlat = SpatieFlatData::from($simple());
+        $ownSimple = OwnSimpleData::from($simple());
+        $spatieSimple = SpatieSimpleData::from($simple());
         $ownPerson = OwnPersonData::from($nested());
         $spatiePerson = SpatiePersonData::from($nested());
         $ownTeam = OwnTeamData::from($team());
         $spatieTeam = SpatieTeamData::from($team());
 
         $this->table(['Scenario', 'DataObject ops/s', 'laravel-data ops/s', 'DataObject advantage', 'Fastest'], [
-            $this->row('Serialization: flat', fn () => $ownFlat->toArray(), fn () => $spatieFlat->toArray(), $iterations, $warmup),
+            $this->row('Serialization: flat', fn () => $ownSimple->toArray(), fn () => $spatieSimple->toArray(), $iterations, $warmup),
             $this->row('Serialization: nested', fn () => $ownPerson->toArray(), fn () => $spatiePerson->toArray(), $iterations, $warmup),
             $this->row('Serialization: collection (20)', fn () => $ownTeam->toArray(), fn () => $spatieTeam->toArray(), $iterations, $warmup),
         ]);
 
         $this->table(['Scenario', 'DataObject CPU us/op', 'laravel-data CPU us/op', 'DataObject advantage', 'Lowest'], [
-            $this->cpuRow('CPU: flat hydration', fn () => OwnFlatData::from($simple()), fn () => SpatieFlatData::from($simple()), $iterations, $warmup),
+            $this->cpuRow('CPU: flat hydration', fn () => OwnSimpleData::from($simple()), fn () => SpatieSimpleData::from($simple()), $iterations, $warmup),
             $this->cpuRow('CPU: nested hydration', fn () => OwnPersonData::from($nested()), fn () => SpatiePersonData::from($nested()), $iterations, $warmup),
             $this->cpuRow('CPU: collection hydration', fn () => OwnTeamData::from($team()), fn () => SpatieTeamData::from($team()), $iterations, $warmup),
             $this->cpuRow('CPU: date cast', fn () => OwnEventData::from($event()), fn () => SpatieEventData::from($event()), $iterations, $warmup),
-            $this->cpuRow('CPU: flat serialization', fn () => $ownFlat->toArray(), fn () => $spatieFlat->toArray(), $iterations, $warmup),
+            $this->cpuRow('CPU: flat serialization', fn () => $ownSimple->toArray(), fn () => $spatieSimple->toArray(), $iterations, $warmup),
             $this->cpuRow('CPU: nested serialization', fn () => $ownPerson->toArray(), fn () => $spatiePerson->toArray(), $iterations, $warmup),
             $this->cpuRow('CPU: collection serialization', fn () => $ownTeam->toArray(), fn () => $spatieTeam->toArray(), $iterations, $warmup),
         ]);
 
         $this->table(['Scenario', 'DataObject bytes/op', 'laravel-data bytes/op', 'DataObject advantage', 'Lowest'], [
-            $this->memoryRow('Memory: flat hydration', fn () => OwnFlatData::from($simple()), fn () => SpatieFlatData::from($simple())),
+            $this->memoryRow('Memory: flat hydration', fn () => OwnSimpleData::from($simple()), fn () => SpatieSimpleData::from($simple())),
             $this->memoryRow('Memory: nested hydration', fn () => OwnPersonData::from($nested()), fn () => SpatiePersonData::from($nested())),
             $this->memoryRow('Memory: collection hydration', fn () => OwnTeamData::from($team()), fn () => SpatieTeamData::from($team())),
         ]);
@@ -120,12 +122,22 @@ final class BenchmarkAll extends Command
     /** @return array<int, string> */
     private function streamRow(string $name, string $path): array
     {
-        $a = $this->stream(static fn (iterable $rows): iterable => OwnFlatData::lazyCollection($rows), $path);
-        $b = $this->stream(static fn (iterable $rows): iterable => (static function () use ($rows): \Generator {
+        $ownFactory = static fn (iterable $rows): iterable => OwnFlatData::lazyCollection($rows);
+        $spatieFactory = static fn (iterable $rows): iterable => (static function () use ($rows): \Generator {
             foreach ($rows as $row) {
                 yield SpatieFlatData::from($row);
             }
-        })(), $path);
+        })();
+
+        // Neither factory has been exercised yet at this point (Hydration/Serialization/CPU/Memory
+        // rows above use the cast-free SimpleData fixture, not FlatData). Without this warmup, whichever
+        // factory runs first below pays a one-off class-loading/first-execution memory tax that has
+        // nothing to do with the library — it would look like a real allocation difference otherwise.
+        $this->warmStream($ownFactory, $path);
+        $this->warmStream($spatieFactory, $path);
+
+        $a = $this->stream($ownFactory, $path);
+        $b = $this->stream($spatieFactory, $path);
         $ownRowsPerSecond = $a['rows'] / $a['seconds'];
         $spatieRowsPerSecond = $b['rows'] / $b['seconds'];
         return [$name, number_format($ownRowsPerSecond), number_format($spatieRowsPerSecond), $this->percent($ownRowsPerSecond, $spatieRowsPerSecond, true), $this->bytes($a['peak']), $this->bytes($b['peak']), $this->percent((float) $a['peak'], (float) $b['peak'], false)];
@@ -200,9 +212,19 @@ final class BenchmarkAll extends Command
     /** @return array{rows: int, seconds: float, peak: int} */
     private function stream(callable $factory, string $path): array
     {
-        gc_collect_cycles(); $base = memory_get_usage(true); $peak = 0; $rows = 0; $start = hrtime(true);
-        foreach ($factory(CsvUsers::rows($path)) as $_) { $rows++; $peak = max($peak, memory_get_usage(true) - $base); }
+        gc_collect_cycles(); $base = memory_get_usage(); $peak = 0; $rows = 0; $start = hrtime(true);
+        foreach ($factory(CsvUsers::rows($path)) as $_) { $rows++; $peak = max($peak, memory_get_usage() - $base); }
         return ['rows' => $rows, 'seconds' => max(0.000001, (hrtime(true) - $start) / 1e9), 'peak' => $peak];
+    }
+
+    private function warmStream(callable $factory, string $path, int $rows = 500): void
+    {
+        $n = 0;
+        foreach ($factory(CsvUsers::rows($path)) as $_) {
+            if (++$n >= $rows) {
+                break;
+            }
+        }
     }
 
     private function bytes(int $bytes): string
