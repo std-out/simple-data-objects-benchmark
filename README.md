@@ -15,7 +15,8 @@ php artisan csv:sample storage/users.csv --rows=100000
 php artisan benchmark:all storage/users.csv --iterations=5
 ```
 
-Or run the same suite in Docker:
+Or run everything in Docker — this suite followed by the
+[XML feed benchmark](#xml-feed-import):
 
 ```sh
 make bench
@@ -37,7 +38,7 @@ php artisan xml:sample storage/offers.xml --nodes=100000
 php artisan benchmark:xml storage/offers.xml
 ```
 
-Or in Docker: `make bench-xml`.
+Or in Docker: `make bench-xml` for this benchmark alone (`make bench` runs it after the main suite).
 
 `benchmark:xml` reads the 100,000-offer price feed written by `xml:sample`
 (about 52 MB) and turns it into the same typed DTOs six different ways:

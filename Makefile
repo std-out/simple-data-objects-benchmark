@@ -10,7 +10,11 @@ sample:
 	docker compose run --rm benchmark php artisan csv:sample storage/users.csv --rows=100000
 
 bench:
-	docker compose run --rm benchmark sh -c "php artisan csv:sample storage/users.csv --rows=100000 && php artisan benchmark:all"
+	docker compose run --rm benchmark sh -c "\
+		php artisan csv:sample storage/users.csv --rows=100000 \
+		&& php artisan benchmark:all \
+		&& php artisan xml:sample storage/offers.xml --nodes=100000 \
+		&& php artisan benchmark:xml"
 
 bench-xml:
 	docker compose run --rm benchmark sh -c "php artisan xml:sample storage/offers.xml --nodes=100000 && php artisan benchmark:xml"
