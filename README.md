@@ -30,6 +30,31 @@ Before measuring, it runs both libraries' cache-warming commands (`sdo:warm`
 and `data:cache-structures`), then reports steady-state rows/sec and peak
 memory. Run it a few times on the same machine and use the median.
 
+## XML feed import
+
+```sh
+php artisan xml:sample storage/offers.xml --nodes=100000
+php artisan benchmark:xml storage/offers.xml
+```
+
+Or in Docker: `make bench-xml`.
+
+`benchmark:xml` reads the 100,000-offer price feed written by `xml:sample`
+(about 52 MB) and turns it into the same typed DTOs six different ways:
+
+- `lazyXml()` — the DTO describes the element, the file is streamed;
+- SimpleXML, collecting every row before hydrating (both libraries);
+- SimpleXML, hydrating node by node without accumulating anything;
+- a hand-rolled `XMLReader` loop with a hand-written element-to-array
+  mapping (both libraries — `spatie/laravel-data` has no XML support of its
+  own, so this is what streaming looks like there).
+
+Each scenario runs in its own PHP process and reports time, peak PHP heap
+and peak process RSS. The two memory columns differ on purpose: the libxml
+tree behind SimpleXML is allocated outside PHP's memory manager, so
+`memory_get_peak_usage()` does not see it while the process RSS does. A
+checksum over all offers confirms every scenario produced the same data.
+
 ## Other commands
 
 ```sh

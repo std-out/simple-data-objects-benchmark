@@ -2,6 +2,7 @@
 /.env
 /.phpunit.cache/
 /storage/*.csv
+/storage/*.xml
 /storage/framework/
 /storage/logs/
 /bootstrap/cache/*.php

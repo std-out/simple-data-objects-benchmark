@@ -1,4 +1,4 @@
-.PHONY: build install sample bench showcase types shell clean
+.PHONY: build install sample bench bench-xml showcase types shell clean
 
 build:
 	docker compose build
@@ -11,6 +11,9 @@ sample:
 
 bench:
 	docker compose run --rm benchmark sh -c "php artisan csv:sample storage/users.csv --rows=100000 && php artisan benchmark:all"
+
+bench-xml:
+	docker compose run --rm benchmark sh -c "php artisan xml:sample storage/offers.xml --nodes=100000 && php artisan benchmark:xml"
 
 showcase:
 	docker compose run --rm benchmark php artisan showcase:data

@@ -22,6 +22,7 @@
     "scripts": {
         "bench": "php artisan benchmark:all",
         "bench:all": "php artisan benchmark:all",
+        "bench:xml": "php artisan benchmark:xml",
         "sample": "php artisan csv:sample storage/users.csv --rows=100000"
     },
     "minimum-stability": "dev",
